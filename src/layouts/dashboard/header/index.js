@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 // @mui
 import { styled } from '@mui/material/styles';
-import { Box, Stack, AppBar, Toolbar, IconButton } from '@mui/material';
+import { Box, Stack, AppBar, Toolbar, IconButton, Typography } from '@mui/material';
 // utils
 import { bgBlur } from '../../../utils/cssStyles';
 // components
@@ -11,20 +11,19 @@ import Searchbar from './Searchbar';
 import AccountPopover from './AccountPopover';
 import LanguagePopover from './LanguagePopover';
 import NotificationsPopover from './NotificationsPopover';
+import Logo from '../../../components/logo/Logo';
 
 // ----------------------------------------------------------------------
 
-const NAV_WIDTH = 280;
-
 const HEADER_MOBILE = 64;
 
-const HEADER_DESKTOP = 92;
+const HEADER_DESKTOP = 64;
 
 const StyledRoot = styled(AppBar)(({ theme }) => ({
   ...bgBlur({ color: theme.palette.background.default }),
-  boxShadow: 'none',
+  boxShadow: 'rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px',
   [theme.breakpoints.up('lg')]: {
-    width: `calc(100% - ${NAV_WIDTH + 1}px)`,
+    width: `calc(100%)`,
   },
 }));
 
@@ -46,32 +45,11 @@ export default function Header({ onOpenNav }) {
   return (
     <StyledRoot>
       <StyledToolbar>
-        <IconButton
-          onClick={onOpenNav}
-          sx={{
-            mr: 1,
-            color: 'text.primary',
-            display: { lg: 'none' },
-          }}
-        >
-          <Iconify icon="eva:menu-2-fill" />
-        </IconButton>
-
-        <Searchbar />
+        <Logo />
+        <Typography variant="h4" sx={{ color: '#061B64', mx: 2 }}>
+          MJ Sales Monitoring System
+        </Typography>
         <Box sx={{ flexGrow: 1 }} />
-
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={{
-            xs: 0.5,
-            sm: 1,
-          }}
-        >
-          <LanguagePopover />
-          <NotificationsPopover />
-          <AccountPopover />
-        </Stack>
       </StyledToolbar>
     </StyledRoot>
   );

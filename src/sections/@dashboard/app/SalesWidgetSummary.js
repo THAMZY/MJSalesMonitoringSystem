@@ -17,12 +17,13 @@ const StyledIcon = styled('div')(({ theme }) => ({
   width: theme.spacing(8),
   height: theme.spacing(8),
   justifyContent: 'center',
-  marginBottom: theme.spacing(3),
+  marginBottom: theme.spacing(1),
 }));
 
 // ----------------------------------------------------------------------
 
-AppWidgetSummary.propTypes = {
+SalesWidgetSummary.propTypes = {
+  type: PropTypes.string,
   color: PropTypes.string,
   icon: PropTypes.string,
   title: PropTypes.string.isRequired,
@@ -30,15 +31,13 @@ AppWidgetSummary.propTypes = {
   sx: PropTypes.object,
 };
 
-export default function AppWidgetSummary({ title, total, icon, color = 'primary', sx, ...other }) {
+export default function SalesWidgetSummary({ title, total, icon, type, color = 'primary', sx, ...other }) {
   return (
     <Card
       sx={{
-        py: 5,
-        boxShadow: 0,
+        py: 2,
         textAlign: 'center',
         color: (theme) => theme.palette[color].darker,
-        bgcolor: (theme) => theme.palette[color].lighter,
         ...sx,
       }}
       {...other}
@@ -53,10 +52,18 @@ export default function AppWidgetSummary({ title, total, icon, color = 'primary'
             )} 100%)`,
         }}
       >
-        <Iconify icon={icon} width={24} height={24} />
+        <Iconify icon={icon} width={30} height={30} />
       </StyledIcon>
 
-      <Typography variant="h3">{fShortenNumber(total)}</Typography>
+      <Typography variant="h4">
+        {type === 'number' && total === 0
+          ? total
+          : type === 'number' && total !== 0
+          ? fShortenNumber(total)
+          : type === 'percentage'
+          ? `${total} %`
+          : total}
+      </Typography>
 
       <Typography variant="subtitle2" sx={{ opacity: 0.72 }}>
         {title}

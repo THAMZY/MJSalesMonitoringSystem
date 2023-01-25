@@ -1,27 +1,263 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
 // @mui
 import { useTheme } from '@mui/material/styles';
-import { Grid, Container, Typography } from '@mui/material';
+import { Grid, Container, Typography, Box, Tab, AppBar, Toolbar } from '@mui/material';
+import Tabs, { tabsClasses } from '@mui/material/Tabs';
 // components
+import { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import Iconify from '../components/iconify';
 // sections
+import { SalesChart, SalesWidgetSummary, CompanyInfo } from '../sections/@dashboard/app';
 import {
-  AppTasks,
-  AppNewsUpdate,
-  AppOrderTimeline,
-  AppCurrentVisits,
-  AppWebsiteVisits,
-  AppTrafficBySite,
-  AppWidgetSummary,
-  AppCurrentSubject,
-  AppConversionRates,
-} from '../sections/@dashboard/app';
+  getCompanyName,
+  getSalesDate3MonthBefore,
+  getSalesRevenue3MonthBefore,
+  getSummaryLatestSalesGrowth,
+  getSummaryTargetAchieved,
+  getSummaryTotalSalesRevenue,
+  getSummaryTotalTargetRevenue,
+  getTargetRevenue3MonthBefore,
+} from '../data/dashboard/dashboard';
 
 // ----------------------------------------------------------------------
 
 export default function DashboardAppPage() {
   const theme = useTheme();
+
+  const [fetchDataFlag, setFetchDataFlag] = useState(false);
+
+  /* BOTTOM TAB INFO */
+  const [currentCompanyNameTabPosition, setCurrentCompanyNameTabPosition] = useState(0);
+  const [companyNameMaxLength, setCompanyNameMaxLength] = useState(0);
+  const [stopCompanyNameTabPosition, setStopCompanyNameTabPosition] = useState(false);
+
+  /* CHART INFO */
+  const [chartTitle, setChartTitle] = useState('');
+  const [chartSubTitle, setChartSubTitle] = useState('');
+  const [salesDateRange, setSalesDateRange] = useState([]);
+  const [currentCompanySalesRevenue, setCurrentCompanySalesRevenue] = useState([]);
+  const [currentCompanyTargetRevenue, setCurrentCompanyTargetRevenue] = useState([]);
+
+  /* SUMMARY INFO */
+  const [currentCompanyTotalSalesRevenue, setCurrentCompanyTotalSalesRevenue] = useState(0);
+  const [currentCompanyTotalTargetRevenue, setCurrentCompanyTotalTargetRevenue] = useState(0);
+  const [currentCompanyTargetAchieved, setCurrentCompanyTargetAchieved] = useState(0);
+  const [currentCompanyLatestSalesGrowth, setCurrentCompanyLatestSalesGrowth] = useState(0);
+
+  /* COMPANY LIST */
+  const [companyName, setCompanyName] = useState([]);
+
+  /* FUNCTION CALLED */
+  const handleCompanyNameTabClick = () => {
+    setStopCompanyNameTabPosition(true);
+  };
+
+  const handleCompanyNameTabChange = (event, newValue) => {
+    setCurrentCompanyNameTabPosition(newValue);
+  };
+
+  useEffect(() => {
+    const getCompanyNameFunc = async () => {
+      const companyNameData = await getCompanyName();
+
+      setCompanyNameMaxLength(companyNameData.length - 1);
+
+      setCompanyName(companyNameData);
+
+      setFetchDataFlag(true);
+    };
+
+    getCompanyNameFunc().catch((error) => {
+      Swal.fire({
+        title: 'Fetch API failed',
+        text: error,
+        icon: 'error',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK',
+      });
+    });
+  }, []);
+
+  let timer;
+
+  const IncreaseCompanyNameTabCount = () => {
+    timer =
+      !timer &&
+      setInterval(() => {
+        setCurrentCompanyNameTabPosition((currentCompanyNameTabPosition) => currentCompanyNameTabPosition + 1);
+      }, 5000);
+  };
+
+  useEffect(() => {
+    if (fetchDataFlag === true) {
+      if (stopCompanyNameTabPosition === false) {
+        if (currentCompanyNameTabPosition < companyNameMaxLength) {
+          IncreaseCompanyNameTabCount();
+        } else if (currentCompanyNameTabPosition >= companyNameMaxLength) {
+          setTimeout(() => {
+            setCurrentCompanyNameTabPosition(0);
+          }, 5000);
+        }
+      }
+    }
+
+    return () => clearInterval(timer);
+  }, [fetchDataFlag, IncreaseCompanyNameTabCount]);
+
+  useEffect(() => {
+    if (fetchDataFlag === true) {
+      const getSalesDateFunc = async () => {
+        const salesDateData = await getSalesDate3MonthBefore(companyName[currentCompanyNameTabPosition].company_id);
+
+        setChartSubTitle(`${salesDateData[0]} - ${salesDateData[salesDateData.length - 1]}`);
+
+        setSalesDateRange(salesDateData);
+      };
+
+      getSalesDateFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+
+      const getSalesRevenueFunc = async () => {
+        const salesRevenueData = await getSalesRevenue3MonthBefore(
+          companyName[currentCompanyNameTabPosition].company_id
+        );
+
+        const newSalesRevenueData = salesRevenueData.map((value) => {
+          if (value === 0) {
+            return NaN;
+          }
+
+          return value;
+        });
+
+        setCurrentCompanySalesRevenue(newSalesRevenueData);
+      };
+
+      getSalesRevenueFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+
+      const getTargetRevenueFunc = async () => {
+        const targetRevenueData = await getTargetRevenue3MonthBefore(
+          companyName[currentCompanyNameTabPosition].company_id
+        );
+
+        const newTargetRevenueData = targetRevenueData.map((value) => {
+          if (value === 0) {
+            return NaN;
+          }
+
+          return value;
+        });
+
+        setCurrentCompanyTargetRevenue(newTargetRevenueData);
+      };
+
+      getTargetRevenueFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+
+      if (companyName[currentCompanyNameTabPosition].company_id === -9999) {
+        setChartTitle('Total Company Sales');
+      } else {
+        setChartTitle(`${companyName[currentCompanyNameTabPosition].company_name} Sales`);
+      }
+
+      const getSummaryTotalSalesRevenueFunc = async () => {
+        const summaryTotalSalesRevenueData = await getSummaryTotalSalesRevenue(
+          companyName[currentCompanyNameTabPosition].company_id
+        );
+
+        setCurrentCompanyTotalSalesRevenue(summaryTotalSalesRevenueData);
+      };
+
+      getSummaryTotalSalesRevenueFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+
+      const getSummaryTotalTargetRevenueFunc = async () => {
+        const summaryTotalTargetRevenueData = await getSummaryTotalTargetRevenue(
+          companyName[currentCompanyNameTabPosition].company_id
+        );
+
+        setCurrentCompanyTotalTargetRevenue(summaryTotalTargetRevenueData);
+      };
+
+      getSummaryTotalTargetRevenueFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+
+      const getSummaryTargetAchievedFunc = async () => {
+        const summaryTargetAchievedData = await getSummaryTargetAchieved(
+          companyName[currentCompanyNameTabPosition].company_id
+        );
+
+        setCurrentCompanyTargetAchieved(summaryTargetAchievedData);
+      };
+
+      getSummaryTargetAchievedFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+
+      const getSummaryLatestSalesGrowthFunc = async () => {
+        const summaryLatestSalesGrowthData = await getSummaryLatestSalesGrowth(
+          companyName[currentCompanyNameTabPosition].company_id
+        );
+
+        setCurrentCompanyLatestSalesGrowth(summaryLatestSalesGrowthData);
+      };
+
+      getSummaryLatestSalesGrowthFunc().catch((error) => {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      });
+    }
+  }, [fetchDataFlag, currentCompanyNameTabPosition]);
 
   return (
     <>
@@ -30,189 +266,120 @@ export default function DashboardAppPage() {
       </Helmet>
 
       <Container maxWidth="xl">
-        <Typography variant="h4" sx={{ mb: 5 }}>
-          Hi, Welcome back
-        </Typography>
-
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Weekly Sales" total={714000} icon={'ant-design:android-filled'} />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="New Users" total={1352831} color="info" icon={'ant-design:apple-filled'} />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Item Orders" total={1723315} color="warning" icon={'ant-design:windows-filled'} />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Bug Reports" total={234} color="error" icon={'ant-design:bug-filled'} />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppWebsiteVisits
-              title="Website Visits"
-              subheader="(+43%) than last year"
-              chartLabels={[
-                '01/01/2003',
-                '02/01/2003',
-                '03/01/2003',
-                '04/01/2003',
-                '05/01/2003',
-                '06/01/2003',
-                '07/01/2003',
-                '08/01/2003',
-                '09/01/2003',
-                '10/01/2003',
-                '11/01/2003',
-              ]}
+          <Grid item xs={12} md={12} lg={12}>
+            <SalesChart
+              title={chartTitle}
+              subheader={chartSubTitle}
+              chartLabels={salesDateRange}
               chartData={[
                 {
-                  name: 'Team A',
-                  type: 'column',
-                  fill: 'solid',
-                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                },
-                {
-                  name: 'Team B',
-                  type: 'area',
-                  fill: 'gradient',
-                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-                },
-                {
-                  name: 'Team C',
+                  name: 'Target Sales',
                   type: 'line',
                   fill: 'solid',
-                  data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
+                  data: currentCompanyTargetRevenue,
                 },
-              ]}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppCurrentVisits
-              title="Current Visits"
-              chartData={[
-                { label: 'America', value: 4344 },
-                { label: 'Asia', value: 5435 },
-                { label: 'Europe', value: 1443 },
-                { label: 'Africa', value: 4443 },
-              ]}
-              chartColors={[
-                theme.palette.primary.main,
-                theme.palette.info.main,
-                theme.palette.warning.main,
-                theme.palette.error.main,
-              ]}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppConversionRates
-              title="Conversion Rates"
-              subheader="(+43%) than last year"
-              chartData={[
-                { label: 'Italy', value: 400 },
-                { label: 'Japan', value: 430 },
-                { label: 'China', value: 448 },
-                { label: 'Canada', value: 470 },
-                { label: 'France', value: 540 },
-                { label: 'Germany', value: 580 },
-                { label: 'South Korea', value: 690 },
-                { label: 'Netherlands', value: 1100 },
-                { label: 'United States', value: 1200 },
-                { label: 'United Kingdom', value: 1380 },
-              ]}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppCurrentSubject
-              title="Current Subject"
-              chartLabels={['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math']}
-              chartData={[
-                { name: 'Series 1', data: [80, 50, 30, 40, 100, 20] },
-                { name: 'Series 2', data: [20, 30, 40, 80, 20, 80] },
-                { name: 'Series 3', data: [44, 76, 78, 13, 43, 10] },
-              ]}
-              chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={8}>
-            <AppNewsUpdate
-              title="News Update"
-              list={[...Array(5)].map((_, index) => ({
-                id: faker.datatype.uuid(),
-                title: faker.name.jobTitle(),
-                description: faker.name.jobTitle(),
-                image: `/assets/images/covers/cover_${index + 1}.jpg`,
-                postedAt: faker.date.recent(),
-              }))}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppOrderTimeline
-              title="Order Timeline"
-              list={[...Array(5)].map((_, index) => ({
-                id: faker.datatype.uuid(),
-                title: [
-                  '1983, orders, $4220',
-                  '12 Invoices have been paid',
-                  'Order #37745 from September',
-                  'New order placed #XF-2356',
-                  'New order placed #XF-2346',
-                ][index],
-                type: `order${index + 1}`,
-                time: faker.date.past(),
-              }))}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <AppTrafficBySite
-              title="Traffic by Site"
-              list={[
+                // {
+                //   name: 'Current Sales',
+                //   type: 'column',
+                //   fill: 'solid',
+                //   data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
+                // },
                 {
-                  name: 'FaceBook',
-                  value: 323234,
-                  icon: <Iconify icon={'eva:facebook-fill'} color="#1877F2" width={32} />,
-                },
-                {
-                  name: 'Google',
-                  value: 341212,
-                  icon: <Iconify icon={'eva:google-fill'} color="#DF3E30" width={32} />,
-                },
-                {
-                  name: 'Linkedin',
-                  value: 411213,
-                  icon: <Iconify icon={'eva:linkedin-fill'} color="#006097" width={32} />,
-                },
-                {
-                  name: 'Twitter',
-                  value: 443232,
-                  icon: <Iconify icon={'eva:twitter-fill'} color="#1C9CEA" width={32} />,
+                  name: 'Actual Sales',
+                  type: 'line',
+                  fill: 'solid',
+                  data: currentCompanySalesRevenue,
                 },
               ]}
             />
           </Grid>
 
-          <Grid item xs={12} md={6} lg={8}>
-            <AppTasks
-              title="Tasks"
-              list={[
-                { id: '1', label: 'Create FireStone Logo' },
-                { id: '2', label: 'Add SCSS and JS files if required' },
-                { id: '3', label: 'Stakeholder Meeting' },
-                { id: '4', label: 'Scoping & Estimations' },
-                { id: '5', label: 'Sprint Showcase' },
-              ]}
+          <Grid item xs={12} sm={6} md={3}>
+            <SalesWidgetSummary
+              type="number"
+              title="Total Target Sales"
+              total={currentCompanyTotalTargetRevenue}
+              color="primary"
+              icon={'foundation:target-two'}
             />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <SalesWidgetSummary
+              type="number"
+              title="Total Actual Sales"
+              total={currentCompanyTotalSalesRevenue}
+              icon={'ri:money-dollar-circle-fill'}
+              color="primary"
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <SalesWidgetSummary
+              type="percentage"
+              title="Target Achieved"
+              total={currentCompanyTargetAchieved}
+              color="primary"
+              icon={'mdi:target-arrow'}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <SalesWidgetSummary
+              type="percentage"
+              title="Latest Sales Growth"
+              total={currentCompanyLatestSalesGrowth}
+              color="primary"
+              icon={'carbon:growth'}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={12} lg={12}>
+            <CompanyInfo title="Company Info" subheader="" />
           </Grid>
         </Grid>
+
+        <AppBar
+          position="fixed"
+          color="default"
+          sx={{ top: 'auto', bottom: 0, boxShadow: '0px 0 10px rgba(0, 0, 0, 0.15)' }}
+        >
+          <Toolbar
+            sx={{
+              flexGrow: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: '100%',
+              }}
+            >
+              <Tabs
+                value={currentCompanyNameTabPosition}
+                onClick={handleCompanyNameTabClick}
+                onChange={handleCompanyNameTabChange}
+                variant="scrollable"
+                allowScrollButtonsMobile
+                scrollButtons
+                sx={{
+                  '& .MuiSvgIcon-root': { fontSize: '2rem' },
+                  [`& .${tabsClasses.scrollButtons}`]: {
+                    '&.Mui-disabled': { opacity: 0.3 },
+                  },
+                }}
+              >
+                {companyName.map((company, index) => (
+                  <Tab
+                    key={company.company_id}
+                    label={<Typography variant="h6">{company.company_name}</Typography>}
+                    wrapped
+                  />
+                ))}
+              </Tabs>
+            </Box>
+          </Toolbar>
+        </AppBar>
       </Container>
     </>
   );

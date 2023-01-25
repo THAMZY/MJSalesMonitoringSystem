@@ -1,5 +1,7 @@
 import { Navigate, useRoutes } from 'react-router-dom';
+import Cookies from 'js-cookie';
 // layouts
+import { useEffect, useState } from 'react';
 import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
 //
@@ -17,17 +19,28 @@ export default function Router() {
     {
       path: '/dashboard',
       element: <DashboardLayout />,
-      children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
-        { path: 'app', element: <DashboardAppPage /> },
-        { path: 'user', element: <UserPage /> },
-        { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
-      ],
+      children:
+        Cookies.get('MJSMS_user_acc') !== undefined && Cookies.get('MJSMS_user_acc') !== ''
+          ? [
+              { element: <Navigate to="/dashboard/app" />, index: true },
+              { path: 'app', element: <DashboardAppPage /> },
+              { path: 'user', element: <UserPage /> },
+              { path: 'products', element: <ProductsPage /> },
+              { path: 'blog', element: <BlogPage /> },
+            ]
+          : [
+              { element: <Navigate to="/dashboard/app" />, index: true },
+              { path: '*', element: <Navigate to="/login" replace /> },
+            ],
     },
     {
       path: 'login',
-      element: <LoginPage />,
+      element:
+        Cookies.get('MJSMS_user_acc') !== undefined && Cookies.get('MJSMS_user_acc') !== '' ? (
+          <Navigate to="/dashboard/app" />
+        ) : (
+          <LoginPage />
+        ),
     },
     {
       element: <SimpleLayout />,
