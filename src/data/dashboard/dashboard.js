@@ -4,18 +4,18 @@ import axios from 'axios';
 export const getCompanyName = () =>
   fetch(`${process.env.REACT_APP_API}Dashboard/getCompanyName`, { credentials: 'include' }).then((data) => data.json());
 
-export const getSalesRevenue3MonthBefore = (company_id) =>
-  fetch(`${process.env.REACT_APP_API}Dashboard/getSalesRevenue3MonthBefore?company_id=${company_id}`, {
+export const getSalesRevenue = (company_id) =>
+  fetch(`${process.env.REACT_APP_API}Dashboard/getSalesRevenue?company_id=${company_id}`, {
     credentials: 'include',
   }).then((data) => data.json());
 
-export const getTargetRevenue3MonthBefore = (company_id) =>
-  fetch(`${process.env.REACT_APP_API}Dashboard/getTargetRevenue3MonthBefore?company_id=${company_id}`, {
+export const getTargetRevenue = (company_id) =>
+  fetch(`${process.env.REACT_APP_API}Dashboard/getTargetRevenue?company_id=${company_id}`, {
     credentials: 'include',
   }).then((data) => data.json());
 
-export const getSalesDate3MonthBefore = (company_id) =>
-  fetch(`${process.env.REACT_APP_API}Dashboard/getSalesDate3MonthBefore?company_id=${company_id}`, {
+export const getSalesDate = (company_id) =>
+  fetch(`${process.env.REACT_APP_API}Dashboard/getSalesDate?company_id=${company_id}`, {
     credentials: 'include',
   }).then((data) => data.json());
 
@@ -36,5 +36,10 @@ export const getSummaryTargetAchieved = (company_id) =>
 
 export const getSummaryLatestSalesGrowth = (company_id) =>
   fetch(`${process.env.REACT_APP_API}Dashboard/getSummaryLatestSalesGrowth?company_id=${company_id}`, {
+    credentials: 'include',
+  }).then((data) => data.json());
+
+export const getAllCompanyChartData = () =>
+  fetch(`${process.env.REACT_APP_API}Dashboard/getAllCompanyChartData`, {
     credentials: 'include',
   }).then((data) => data.json());
