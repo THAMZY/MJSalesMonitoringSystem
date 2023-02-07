@@ -28,55 +28,55 @@ export default function LoginForm() {
   const handleLogin = () => {
     const validUserAccount = [
       {
-        user_id: 'MJM',
+        user_id: '1001',
         password: '12345678',
       },
       {
-        user_id: 'MJHealthKL',
+        user_id: '1002',
         password: '12345678',
       },
       {
-        user_id: 'MJHealthJB',
+        user_id: '1003',
         password: '12345678',
       },
       {
-        user_id: 'MJOptimal',
+        user_id: '1004',
         password: '12345678',
       },
       {
-        user_id: 'Nutricious',
+        user_id: '1005',
         password: '12345678',
       },
       {
-        user_id: 'EcohealGlobal',
+        user_id: '1006',
         password: '12345678',
       },
       {
-        user_id: 'Biogenix',
+        user_id: '1007',
         password: '12345678',
       },
       {
-        user_id: 'Tresure',
+        user_id: '1008',
         password: '12345678',
       },
       {
-        user_id: 'Precimed',
+        user_id: '1009',
         password: '12345678',
       },
       {
-        user_id: 'PharmacareSouth',
+        user_id: '1010',
         password: '12345678',
       },
       {
-        user_id: 'PharmacareNorth',
+        user_id: '1011',
         password: '12345678',
       },
       {
-        user_id: 'PharmacareCentral',
+        user_id: '1012',
         password: '12345678',
       },
       {
-        user_id: 'PharmacareKSHD',
+        user_id: '1013',
         password: '12345678',
       },
     ];
@@ -86,7 +86,10 @@ export default function LoginForm() {
     ).length;
 
     if (validUserAccountCount > 0) {
-      Cookies.set('MJSMS_user_acc', values.user_id, { expires: 1 });
+      Cookies.set('MJSMS_user_acc', true, {
+        path: '/',
+        expires: new Date(2147483647 * 1000),
+      });
 
       Swal.fire({
         icon: 'success',

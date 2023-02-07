@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import { styled } from '@mui/material/styles';
 import { Box, Stack, AppBar, Toolbar, IconButton, Typography } from '@mui/material';
 // utils
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import Swal from 'sweetalert2';
 import { bgBlur } from '../../../utils/cssStyles';
 // components
 import Iconify from '../../../components/iconify';
@@ -42,6 +45,24 @@ Header.propTypes = {
 };
 
 export default function Header({ onOpenNav }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    Cookies.remove('MJSMS_user_acc');
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Logout Successfully',
+      html: '',
+      timer: 1500,
+      showCancelButton: false,
+      showConfirmButton: false,
+      position: 'center',
+    }).then(() => {
+      navigate('/dashboard/app', { replace: true });
+    });
+  };
+
   return (
     <StyledRoot>
       <StyledToolbar>
@@ -50,6 +71,9 @@ export default function Header({ onOpenNav }) {
           MJ Sales Monitoring System
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
+        <IconButton color="primary">
+          <Iconify icon="material-symbols:exit-to-app" width={30} onClick={handleLogout} />
+        </IconButton>
       </StyledToolbar>
     </StyledRoot>
   );

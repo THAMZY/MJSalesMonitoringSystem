@@ -5,8 +5,8 @@
   "version": "1.6.0",
   "private": false,
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "env-cmd -f .env.development react-scripts --max-http-header-size=9999999999 start",
+    "build": "env-cmd -f .env.production react-scripts --max-http-header-size=9999999999 build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .js,.jsx ./src",
@@ -48,6 +48,7 @@
     "axios": "^1.2.3",
     "change-case": "^4.1.2",
     "date-fns": "^2.29.3",
+    "env-cmd": "^10.1.0",
     "history": "^5.3.0",
     "js-cookie": "^3.0.1",
     "lodash": "^4.17.21",

@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
+import { Link as RouterLink } from 'react-router-dom';
 // @mui
 
 import {
@@ -16,11 +17,14 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Button,
 } from '@mui/material';
 
 // components
 import { useEffect, useState } from 'react';
+
 import { MultipleMode, SingleMode } from '../sections/@dashboard/app';
+import Iconify from '../components/iconify/Iconify';
 
 // ----------------------------------------------------------------------
 
@@ -38,14 +42,32 @@ export default function DashboardAppPage() {
       </Helmet>
 
       <Container maxWidth="xl">
-        <Grid container direction="row" justifyContent="flex-end" alignItems="center" spacing={3}>
+        <Grid container direction="row" justifyContent="space-between" alignItems="center" spacing={3} sx={{ mb: 0.5 }}>
           <Grid item>
             <FormControl>
               <RadioGroup value={modeValue} row name="mode-group" onChange={handleModeChange}>
-                <FormControlLabel value="1" control={<Radio />} label="Single Mode" />
-                <FormControlLabel value="2" control={<Radio />} label="Multiple Mode" />
+                <FormControlLabel
+                  value="1"
+                  control={<Radio />}
+                  label={<Typography variant="body1">Single View</Typography>}
+                />
+                <FormControlLabel
+                  value="2"
+                  control={<Radio />}
+                  label={<Typography variant="body1">Multiple View</Typography>}
+                />
               </RadioGroup>
             </FormControl>
+          </Grid>
+          <Grid item>
+            <Button
+              variant="outlined"
+              component={RouterLink}
+              to={'/'}
+              startIcon={<Iconify icon="material-symbols:add" />}
+            >
+              UPDATE
+            </Button>
           </Grid>
         </Grid>
 
