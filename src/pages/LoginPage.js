@@ -25,6 +25,7 @@ const StyledSection = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  alignItems: 'center',
   boxShadow: theme.customShadows.card,
   backgroundColor: theme.palette.background.default,
 }));
@@ -61,7 +62,7 @@ export default function LoginPage() {
 
         {mdUp && (
           <StyledSection>
-            <img src="/assets/illustrations/sales-chart-illustration-2.png" alt="login" />
+            <img src="/assets/logo.svg" width="300" alt="login" />
           </StyledSection>
         )}
 
