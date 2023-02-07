@@ -63,7 +63,7 @@ export default function DashboardAppPage() {
             <Button
               variant="outlined"
               component={RouterLink}
-              to={'/'}
+              to={'/dashboard/update-chart'}
               startIcon={<Iconify icon="material-symbols:add" />}
             >
               UPDATE
