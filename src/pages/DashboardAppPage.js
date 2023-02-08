@@ -23,6 +23,7 @@ import {
 // components
 import { useEffect, useState } from 'react';
 
+import Cookies from 'js-cookie';
 import { MultipleMode, SingleMode } from '../sections/@dashboard/app';
 import Iconify from '../components/iconify/Iconify';
 
@@ -31,8 +32,21 @@ import Iconify from '../components/iconify/Iconify';
 export default function DashboardAppPage() {
   const [modeValue, setModeValue] = useState('1');
 
+  useEffect(() => {
+    if (Cookies.get('MJSMS_chart_view') !== undefined) {
+      setModeValue(Cookies.get('MJSMS_chart_view'));
+    } else {
+      setModeValue('1');
+    }
+  }, []);
+
   const handleModeChange = (event) => {
     setModeValue(event.target.value);
+
+    Cookies.set('MJSMS_chart_view', event.target.value, {
+      path: '/',
+      expires: new Date(2147483647 * 1000),
+    });
   };
 
   return (

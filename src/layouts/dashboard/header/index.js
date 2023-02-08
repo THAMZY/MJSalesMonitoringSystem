@@ -49,6 +49,7 @@ export default function Header({ onOpenNav }) {
 
   const handleLogout = () => {
     Cookies.remove('MJSMS_user_acc');
+    Cookies.remove('MJSMS_chart_view');
 
     Swal.fire({
       icon: 'success',
@@ -72,7 +73,7 @@ export default function Header({ onOpenNav }) {
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
         <IconButton color="primary">
-          <Iconify icon="material-symbols:exit-to-app" width={30} onClick={handleLogout} />
+          <Iconify sx={{ color: '#061B64' }} icon="material-symbols:exit-to-app" width={30} onClick={handleLogout} />
         </IconButton>
       </StyledToolbar>
     </StyledRoot>

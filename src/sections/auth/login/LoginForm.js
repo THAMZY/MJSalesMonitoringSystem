@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 // @mui
@@ -21,6 +21,11 @@ export default function LoginForm() {
     password: '',
   });
 
+  useEffect(() => {
+    Cookies.remove('MJSMS_user_acc');
+    Cookies.remove('MJSMS_chart_view');
+  }, []);
+
   const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
   };
@@ -28,65 +33,78 @@ export default function LoginForm() {
   const handleLogin = () => {
     const validUserAccount = [
       {
+        company_id: 1001,
         user_id: '1001',
         password: '12345678',
       },
       {
+        company_id: 1002,
         user_id: '1002',
         password: '12345678',
       },
       {
+        company_id: 1003,
         user_id: '1003',
         password: '12345678',
       },
       {
+        company_id: 1004,
         user_id: '1004',
         password: '12345678',
       },
       {
+        company_id: 1005,
         user_id: '1005',
         password: '12345678',
       },
       {
+        company_id: 1006,
         user_id: '1006',
         password: '12345678',
       },
       {
+        company_id: 1007,
         user_id: '1007',
         password: '12345678',
       },
       {
+        company_id: 1008,
         user_id: '1008',
         password: '12345678',
       },
       {
+        company_id: 1009,
         user_id: '1009',
         password: '12345678',
       },
       {
+        company_id: 1010,
         user_id: '1010',
         password: '12345678',
       },
       {
+        company_id: 1011,
         user_id: '1011',
         password: '12345678',
       },
       {
+        company_id: 1012,
         user_id: '1012',
         password: '12345678',
       },
       {
+        company_id: 1013,
         user_id: '1013',
         password: '12345678',
       },
     ];
 
-    const validUserAccountCount = validUserAccount.filter(
+    const validUserAccountArr = validUserAccount.find(
       (f) => f.user_id === values.user_id.trim() && f.password === values.password.trim()
-    ).length;
+    );
 
-    if (validUserAccountCount > 0) {
-      Cookies.set('MJSMS_user_acc', true, {
+    if (validUserAccountArr !== undefined) {
+      Cookies.set('MJSMS_user_acc', validUserAccountArr.company_id, {
         path: '/',
         expires: new Date(2147483647 * 1000),
       });

@@ -49,6 +49,8 @@ export default function SalesChart({ title, subheader, chartLabels, chartData, .
     //   ],
     // },
     dataLabels: {
+      offsetX: 0,
+      offsetY: -20,
       enabled: true,
       enabledOnSeries: false,
       textAnchor: 'middle',
@@ -66,8 +68,6 @@ export default function SalesChart({ title, subheader, chartLabels, chartData, .
 
         return `RM ${labelValue}`;
       },
-      offsetX: 0,
-      offsetY: 10,
       style: {
         fontSize: '14px',
         fontFamily: 'Helvetica, Arial, sans-serif',
@@ -97,7 +97,9 @@ export default function SalesChart({ title, subheader, chartLabels, chartData, .
       },
     },
     colors: ['#76B2BA', '#66DA26', '#546E7A', '#E91E63', '#2E93fA'],
-    plotOptions: { bar: { columnWidth: '16%' } },
+    plotOptions: {
+      bar: { columnWidth: '16%' },
+    },
     fill: { type: chartData.map((i) => i.fill) },
     labels: chartLabels,
     legend: {
