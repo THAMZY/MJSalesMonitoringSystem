@@ -68,8 +68,12 @@ export default function Header({ onOpenNav }) {
     <StyledRoot>
       <StyledToolbar>
         <Logo />
-        <Typography variant="h4" sx={{ color: '#061B64', mx: 2 }}>
-          MJ Sales Monitoring System
+        <Box sx={{ flexGrow: 1 }} />
+        <Typography
+          variant="h4"
+          sx={{ color: '#061B64', mx: 2, display: { xs: 'none', sm: 'block', md: 'block', lg: 'block', xl: 'block' } }}
+        >
+          MJHM Sales Monitoring System
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
         <IconButton color="primary">

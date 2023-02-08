@@ -102,7 +102,7 @@ export default function SingleMode() {
       !timer &&
       setInterval(() => {
         setCurrentCompanyNameTabPosition((currentCompanyNameTabPosition) => currentCompanyNameTabPosition + 1);
-      }, 5000);
+      }, 8000);
   };
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function SingleMode() {
         } else if (currentCompanyNameTabPosition >= companyNameMaxLength) {
           setTimeout(() => {
             setCurrentCompanyNameTabPosition(0);
-          }, 5000);
+          }, 8000);
         }
       }
     }
