@@ -79,6 +79,16 @@ export default function UpdateChartPage() {
       };
 
       viewCompanyChartDetailsFunc().catch((error) => {
+        if (error.response.status === 503) {
+          Swal.fire({
+            title: 'Offline Mode',
+            text: 'currently offline',
+            icon: 'error',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK',
+          });
+        }
+
         Swal.fire({
           title: 'Fetch API failed',
           text: error,

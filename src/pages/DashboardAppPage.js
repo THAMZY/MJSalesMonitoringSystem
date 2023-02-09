@@ -24,6 +24,7 @@ import {
 import { useEffect, useState } from 'react';
 
 import Cookies from 'js-cookie';
+
 import { MultipleMode, SingleMode } from '../sections/@dashboard/app';
 import Iconify from '../components/iconify/Iconify';
 
