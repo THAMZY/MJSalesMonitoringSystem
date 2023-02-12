@@ -43,6 +43,7 @@ export default function DashboardAppPage() {
 
   const handleModeChange = (event) => {
     setModeValue(event.target.value);
+    console.log('hey');
 
     Cookies.set('MJSMS_chart_view', event.target.value, {
       path: '/',

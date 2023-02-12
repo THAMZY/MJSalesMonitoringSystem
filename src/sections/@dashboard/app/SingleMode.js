@@ -15,15 +15,20 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Skeleton,
+  Card,
 } from '@mui/material';
 import Tabs, { tabsClasses } from '@mui/material/Tabs';
 // components
 import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import Iconify from '../../../components/iconify';
 // sections
 import { SalesChart, SalesWidgetSummary, CompanyInfo } from '.';
 import {
+  getAllCompanyChartData,
   getCompanyName,
   getSalesDate,
   getSalesRevenue,
@@ -33,16 +38,62 @@ import {
   getSummaryTotalTargetRevenue,
   getTargetRevenue,
 } from '../../../data/dashboard/dashboard';
+import { getMaintenanceDate } from '../../../data/maintenance/maintenance';
 
 // ----------------------------------------------------------------------
 
 export default function SingleMode() {
+  function CheckMaintenance() {
+    const getMaintenanceDateFunc = async () => {
+      const maintenanceDateData = await getMaintenanceDate();
+
+      const maintenanceCookies = Cookies.get('maintenance') === undefined ? '' : Cookies.get('maintenance');
+
+      if ((maintenanceDateData.desc ?? '') !== maintenanceCookies) {
+        Cookies.set('maintenance', maintenanceDateData.desc ?? '', {
+          path: '/',
+          expires: new Date(2147483647 * 1000),
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'New Update Available',
+          html: 'Page will refresh now.',
+          timer: 2000,
+          showCancelButton: false,
+          showConfirmButton: false,
+          position: 'center',
+        }).then(() => {
+          window.location.reload(true);
+        });
+      }
+    };
+
+    getMaintenanceDateFunc().catch((error) => {
+      if (error === 503) {
+        navigate('/maintenance', { replace: true });
+      } else {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      }
+    });
+  }
+
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
   const [fetchDataFlag, setFetchDataFlag] = useState(false);
 
   /* MODE 1 DECLARATION BEGIN */
 
   /* COMPANY LIST */
   const [companyName, setCompanyName] = useState([]);
+  const [companyChartDataList, setCompanyChartDataList] = useState([]);
 
   /* BOTTOM TAB INFO */
   const [currentCompanyNameTabPosition, setCurrentCompanyNameTabPosition] = useState(0);
@@ -55,6 +106,7 @@ export default function SingleMode() {
   const [salesDateRange, setSalesDateRange] = useState([]);
   const [currentCompanySalesRevenue, setCurrentCompanySalesRevenue] = useState([]);
   const [currentCompanyTargetRevenue, setCurrentCompanyTargetRevenue] = useState([]);
+  const [currentChartMarkerDiscrete, setCurrentChartMarkerDiscrete] = useState([]);
 
   /* SUMMARY INFO */
   const [currentCompanyTotalSalesRevenue, setCurrentCompanyTotalSalesRevenue] = useState(0);
@@ -74,24 +126,74 @@ export default function SingleMode() {
   /* MODE 1 DECLARATION END */
 
   useEffect(() => {
+    CheckMaintenance();
+
     const getCompanyNameFunc = async () => {
       const companyNameData = await getCompanyName();
 
       setCompanyNameMaxLength(companyNameData.length - 1);
 
       setCompanyName(companyNameData);
+    };
+
+    getCompanyNameFunc().catch((error) => {
+      if (error === 503) {
+        navigate('/maintenance', { replace: true });
+      } else {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      }
+
+      setFetchDataFlag(false);
+    });
+
+    const getAllCompanyChartDataFunc = async () => {
+      const getAllCompanyChartValue = await getAllCompanyChartData();
+
+      const newGetAllCompanyChartValue = getAllCompanyChartValue.map((input) => {
+        const newCSR = input.chart_sales_revenue.map((csr, csrIdx) => {
+          if (csr === 0) {
+            return NaN;
+          }
+
+          return csr;
+        });
+
+        const newCTR = input.chart_target_revenue.map((ctr, ctrIdx) => {
+          if (ctr === 0) {
+            return NaN;
+          }
+
+          return ctr;
+        });
+
+        return { ...input, chart_sales_revenue: newCSR, chart_target_revenue: newCTR };
+      });
+
+      setCompanyChartDataList(newGetAllCompanyChartValue);
 
       setFetchDataFlag(true);
     };
 
-    getCompanyNameFunc().catch((error) => {
-      Swal.fire({
-        title: 'Fetch API failed',
-        text: error,
-        icon: 'error',
-        confirmButtonColor: '#3085d6',
-        confirmButtonText: 'OK',
-      });
+    getAllCompanyChartDataFunc().catch((error) => {
+      if (error === 503) {
+        navigate('/maintenance', { replace: true });
+      } else {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      }
+
+      setFetchDataFlag(false);
     });
   }, []);
 
@@ -123,178 +225,185 @@ export default function SingleMode() {
 
   useEffect(() => {
     if (fetchDataFlag === true) {
-      const getSalesDateFunc = async () => {
-        const salesDateData = await getSalesDate(companyName[currentCompanyNameTabPosition].company_id);
+      CheckMaintenance();
 
-        setChartSubTitle(`${salesDateData[0]} - ${salesDateData[salesDateData.length - 1]}`);
+      const selectedCompanyChartData = companyChartDataList.find(
+        (f) => f.chart_company_id === companyName[currentCompanyNameTabPosition].company_id
+      );
 
-        setSalesDateRange(salesDateData);
-      };
+      setChartSubTitle(selectedCompanyChartData.chart_date_range);
 
-      getSalesDateFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
+      setSalesDateRange(selectedCompanyChartData.chart_date_list);
+      setCurrentCompanySalesRevenue(selectedCompanyChartData.chart_sales_revenue);
+
+      setCurrentCompanyTargetRevenue(selectedCompanyChartData.chart_target_revenue);
+
+      setChartTitle(
+        selectedCompanyChartData.chart_company_id === -9999
+          ? 'Total Company Sales'
+          : `${selectedCompanyChartData.chart_company_name} Sales`
+      );
+
+      const discreteArr = [];
+      selectedCompanyChartData.chart_sales_revenue.map((val, index) => {
+        const target = !Number.isNaN(selectedCompanyChartData.chart_target_revenue[index] ?? NaN)
+          ? Number(selectedCompanyChartData.chart_target_revenue[index])
+          : NaN;
+
+        const sales = !Number.isNaN(val) ? Number(val) : NaN;
+
+        const color = sales >= target ? '#66DA26' : '#E91E63';
+
+        discreteArr.push({
+          seriesIndex: 1,
+          dataPointIndex: index,
+          fillColor: color,
+          strokeColor: '#fff',
+          size: 6,
+          strokeWidth: 2,
+          strokeOpacity: 0.9,
+          strokeDashArray: 0,
+          fillOpacity: 1,
+          shape: 'circle',
+          hover: {
+            size: undefined,
+            sizeOffset: 3,
+          },
         });
+
+        return val;
       });
 
-      const getSalesRevenueFunc = async () => {
-        const salesRevenueData = await getSalesRevenue(companyName[currentCompanyNameTabPosition].company_id);
+      setCurrentChartMarkerDiscrete(discreteArr);
 
-        const newSalesRevenueData = salesRevenueData.map((value) => {
-          if (value === 0) {
-            return NaN;
-          }
+      setIsLoading(false);
 
-          return value;
-        });
+      // const getSummaryTotalSalesRevenueFunc = async () => {
+      //   const summaryTotalSalesRevenueData = await getSummaryTotalSalesRevenue(
+      //     companyName[currentCompanyNameTabPosition].company_id
+      //   );
 
-        setCurrentCompanySalesRevenue(newSalesRevenueData);
-      };
+      //   setCurrentCompanyTotalSalesRevenue(summaryTotalSalesRevenueData);
+      // };
 
-      getSalesRevenueFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
-      });
+      // getSummaryTotalSalesRevenueFunc().catch((error) => {
+      //   if (error === 503) {
+      //     navigate('/maintenance', { replace: true });
+      //   } else {
+      //     Swal.fire({
+      //       title: 'Fetch API failed',
+      //       text: error,
+      //       icon: 'error',
+      //       confirmButtonColor: '#3085d6',
+      //       confirmButtonText: 'OK',
+      //     });
+      //   }
+      // });
 
-      const getTargetRevenueFunc = async () => {
-        const targetRevenueData = await getTargetRevenue(companyName[currentCompanyNameTabPosition].company_id);
+      // const getSummaryTotalTargetRevenueFunc = async () => {
+      //   const summaryTotalTargetRevenueData = await getSummaryTotalTargetRevenue(
+      //     companyName[currentCompanyNameTabPosition].company_id
+      //   );
 
-        const newTargetRevenueData = targetRevenueData.map((value) => {
-          if (value === 0) {
-            return NaN;
-          }
+      //   setCurrentCompanyTotalTargetRevenue(summaryTotalTargetRevenueData);
+      // };
 
-          return value;
-        });
+      // getSummaryTotalTargetRevenueFunc().catch((error) => {
+      //   if (error === 503) {
+      //     navigate('/maintenance', { replace: true });
+      //   } else {
+      //     Swal.fire({
+      //       title: 'Fetch API failed',
+      //       text: error,
+      //       icon: 'error',
+      //       confirmButtonColor: '#3085d6',
+      //       confirmButtonText: 'OK',
+      //     });
+      //   }
+      // });
 
-        setCurrentCompanyTargetRevenue(newTargetRevenueData);
-      };
+      // const getSummaryTargetAchievedFunc = async () => {
+      //   const summaryTargetAchievedData = await getSummaryTargetAchieved(
+      //     companyName[currentCompanyNameTabPosition].company_id
+      //   );
 
-      getTargetRevenueFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
-      });
+      //   setCurrentCompanyTargetAchieved(summaryTargetAchievedData);
+      // };
 
-      if (companyName[currentCompanyNameTabPosition].company_id === -9999) {
-        setChartTitle('Total Company Sales');
-      } else {
-        setChartTitle(`${companyName[currentCompanyNameTabPosition].company_name} Sales`);
-      }
+      // getSummaryTargetAchievedFunc().catch((error) => {
+      //   if (error === 503) {
+      //     navigate('/maintenance', { replace: true });
+      //   } else {
+      //     Swal.fire({
+      //       title: 'Fetch API failed',
+      //       text: error,
+      //       icon: 'error',
+      //       confirmButtonColor: '#3085d6',
+      //       confirmButtonText: 'OK',
+      //     });
+      //   }
+      // });
 
-      const getSummaryTotalSalesRevenueFunc = async () => {
-        const summaryTotalSalesRevenueData = await getSummaryTotalSalesRevenue(
-          companyName[currentCompanyNameTabPosition].company_id
-        );
+      // const getSummaryLatestSalesGrowthFunc = async () => {
+      //   const summaryLatestSalesGrowthData = await getSummaryLatestSalesGrowth(
+      //     companyName[currentCompanyNameTabPosition].company_id
+      //   );
 
-        setCurrentCompanyTotalSalesRevenue(summaryTotalSalesRevenueData);
-      };
+      //   setCurrentCompanyLatestSalesGrowth(summaryLatestSalesGrowthData);
+      // };
 
-      getSummaryTotalSalesRevenueFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
-      });
-
-      const getSummaryTotalTargetRevenueFunc = async () => {
-        const summaryTotalTargetRevenueData = await getSummaryTotalTargetRevenue(
-          companyName[currentCompanyNameTabPosition].company_id
-        );
-
-        setCurrentCompanyTotalTargetRevenue(summaryTotalTargetRevenueData);
-      };
-
-      getSummaryTotalTargetRevenueFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
-      });
-
-      const getSummaryTargetAchievedFunc = async () => {
-        const summaryTargetAchievedData = await getSummaryTargetAchieved(
-          companyName[currentCompanyNameTabPosition].company_id
-        );
-
-        setCurrentCompanyTargetAchieved(summaryTargetAchievedData);
-      };
-
-      getSummaryTargetAchievedFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
-      });
-
-      const getSummaryLatestSalesGrowthFunc = async () => {
-        const summaryLatestSalesGrowthData = await getSummaryLatestSalesGrowth(
-          companyName[currentCompanyNameTabPosition].company_id
-        );
-
-        setCurrentCompanyLatestSalesGrowth(summaryLatestSalesGrowthData);
-      };
-
-      getSummaryLatestSalesGrowthFunc().catch((error) => {
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
-      });
+      // getSummaryLatestSalesGrowthFunc().catch((error) => {
+      //   if (error === 503) {
+      //     navigate('/maintenance', { replace: true });
+      //   } else {
+      //     Swal.fire({
+      //       title: 'Fetch API failed',
+      //       text: error,
+      //       icon: 'error',
+      //       confirmButtonColor: '#3085d6',
+      //       confirmButtonText: 'OK',
+      //     });
+      //   }
+      // });
     }
   }, [fetchDataFlag, currentCompanyNameTabPosition]);
 
   return (
     <>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={12} lg={12}>
-          <SalesChart
-            title={chartTitle}
-            subheader={chartSubTitle}
-            chartLabels={salesDateRange}
-            chartData={[
-              {
-                name: 'Target Sales',
-                type: 'column',
-                fill: 'solid',
-                data: currentCompanyTargetRevenue,
-              },
-              {
-                name: 'Actual Sales',
-                type: 'line',
-                fill: 'solid',
-                data: currentCompanySalesRevenue,
-              },
-            ]}
-          />
-        </Grid>
+        {isLoading ? (
+          <Grid item xs={12} md={12} lg={12}>
+            <Card>
+              <Skeleton variant="rectangular" height={485} />
+            </Card>
+          </Grid>
+        ) : (
+          <Grid item xs={12} md={12} lg={12}>
+            <SalesChart
+              height={365}
+              title={chartTitle}
+              subheader={chartSubTitle}
+              chartLabels={salesDateRange}
+              markerDiscrete={currentChartMarkerDiscrete}
+              chartData={[
+                {
+                  name: 'Target Sales',
+                  type: 'column',
+                  fill: 'solid',
+                  data: currentCompanyTargetRevenue,
+                },
+                {
+                  name: 'Actual Sales',
+                  type: 'line',
+                  fill: 'solid',
+                  data: currentCompanySalesRevenue,
+                },
+              ]}
+            />
+          </Grid>
+        )}
 
-        <Grid item xs={12} sm={6} md={3}>
+        {/* <Grid item xs={12} sm={6} md={3}>
           <SalesWidgetSummary
             type="number"
             title="Total Target Sales"
@@ -332,7 +441,7 @@ export default function SingleMode() {
             color="primary"
             icon={'carbon:growth'}
           />
-        </Grid>
+        </Grid> */}
       </Grid>
 
       <AppBar

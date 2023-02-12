@@ -12,6 +12,7 @@ import Page404 from './pages/Page404';
 import ProductsPage from './pages/ProductsPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import UpdateChartPage from './pages/UpdateChartPage';
+import MaintenancePage from './pages/MaintenancePage';
 
 // ----------------------------------------------------------------------
 
@@ -55,6 +56,10 @@ export default function Router() {
     {
       path: '*',
       element: <Navigate to="/404" replace />,
+    },
+    {
+      path: 'maintenance',
+      element: <MaintenancePage />,
     },
   ]);
 

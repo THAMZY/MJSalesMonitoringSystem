@@ -11,57 +11,61 @@ import { fShortenNumber } from '../../../utils/formatNumber';
 // ----------------------------------------------------------------------
 
 SalesChart.propTypes = {
+  height: PropTypes.number,
   title: PropTypes.string,
   subheader: PropTypes.string,
   chartData: PropTypes.array.isRequired,
   chartLabels: PropTypes.arrayOf(PropTypes.string).isRequired,
+  markerDiscrete: PropTypes.array,
 };
 
-export default function SalesChart({ title, subheader, chartLabels, chartData, ...other }) {
+export default function SalesChart({ title, subheader, chartLabels, chartData, markerDiscrete, height, ...other }) {
   const chartOptions = useChart({
-    // points: [
-    //   {
-    //     x: new Date('01 Dec 2017').getTime(),
-    //     y: 8607.55,
-    //     marker: {
-    //       size: 8,
-    //     },
-    //     label: {
-    //       borderColor: '#FF4560',
-    //       text: 'Point Annotation',
-    //     },
-    //   },
-    // ],
-    // annotations: {
-    //   yaxis: [
-    //     {
-    //       y: 8800,
-    //       borderColor: '#00E396',
-    //       label: {
-    //         borderColor: '#00E396',
-    //         style: {
-    //           color: '#fff',
-    //           background: '#00E396',
-    //         },
-    //         text: 'Y-axis annotation on 8800',
-    //       },
-    //     },
-    //   ],
-    // },
     dataLabels: {
-      offsetX: 0,
+      background: {
+        enabled: true,
+        foreColor: '#fff',
+        padding: 4,
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: '#fff',
+        opacity: 0.8,
+        dropShadow: {
+          enabled: true,
+          top: 1,
+          left: 1,
+          blur: 1,
+          color: '#000',
+          opacity: 0.45,
+        },
+      },
       offsetY: -20,
+      offsetX: 0,
       enabled: true,
-      enabledOnSeries: false,
+      enabledOnSeries: [1],
       textAnchor: 'middle',
       distributed: false,
       formatter: (value, { seriesIndex, dataPointIndex, w }) => {
         // return `${w.config.series[seriesIndex].name}:  ${value}`;
 
+        const targetSales = Number.isNaN(w.config.series[0].data[dataPointIndex])
+          ? 0
+          : Number(w.config.series[0].data[dataPointIndex]);
+        const ActualSales = Number.isNaN(w.config.series[1].data[dataPointIndex])
+          ? 0
+          : Number(w.config.series[1].data[dataPointIndex]);
+
         let labelValue = value;
 
         if (Number.isNaN(labelValue) === true) {
           return '';
+        }
+
+        if (ActualSales >= targetSales) {
+          if (seriesIndex === 1) {
+            labelValue = `${fShortenNumber(labelValue)}`;
+            return `RM ${labelValue}`;
+          }
         }
 
         labelValue = fShortenNumber(labelValue);
@@ -76,29 +80,23 @@ export default function SalesChart({ title, subheader, chartLabels, chartData, .
       },
     },
     markers: {
-      size: 6,
-      colors: undefined,
-      strokeColors: '#fff',
-      strokeWidth: 2,
-      strokeOpacity: 0.9,
-      strokeDashArray: 0,
-      fillOpacity: 1,
-      discrete: [],
-      shape: 'circle',
-      radius: 2,
       offsetX: 0,
       offsetY: 0,
+      colors: undefined,
+      radius: 2,
+      discrete: markerDiscrete ?? [],
       onClick: undefined,
       onDblClick: undefined,
       showNullDataPoints: false,
-      hover: {
-        size: undefined,
-        sizeOffset: 2,
-      },
     },
-    colors: ['#76B2BA', '#66DA26', '#546E7A', '#E91E63', '#2E93fA'],
+    colors: ['#546E7A', '#feb019', '#546E7A', '#E91E63', '#66DA26'],
     plotOptions: {
-      bar: { columnWidth: '16%' },
+      bar: {
+        horizontal: false,
+        dataLabels: {
+          // position: 'bottom',
+        },
+      },
     },
     fill: { type: chartData.map((i) => i.fill) },
     labels: chartLabels,
@@ -146,8 +144,13 @@ export default function SalesChart({ title, subheader, chartLabels, chartData, .
     },
     tooltip: {
       theme: 'dark',
+      followCursor: true,
       shared: false,
       intersect: true,
+      marker: { show: true },
+      onDatasetHover: {
+        highlightDataSeries: false,
+      },
       y: {
         formatter: (y) => {
           if (typeof y !== 'undefined' && Number.isNaN(y) !== true) {
@@ -172,7 +175,7 @@ export default function SalesChart({ title, subheader, chartLabels, chartData, .
       <CardHeader title={title} subheader={subheader} />
 
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <ReactApexChart type="line" series={chartData} options={chartOptions} height={364} />
+        <ReactApexChart type="line" series={chartData} options={chartOptions} height={height} />
       </Box>
     </Card>
   );

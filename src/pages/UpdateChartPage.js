@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 // @mui
 
 import {
@@ -40,6 +40,7 @@ import { isNaN, isNumber } from 'lodash';
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import Iconify from '../components/iconify/Iconify';
 import { updateCompanyChartDetails, viewCompanyChartDetails } from '../data/update-chart/update-chart';
+import { getMaintenanceDate } from '../data/maintenance/maintenance';
 
 // ----------------------------------------------------------------------
 
@@ -50,6 +51,49 @@ const NoMaxWidthTooltip = styled(({ className, ...props }) => <Tooltip {...props
 });
 
 export default function UpdateChartPage() {
+  function CheckMaintenance() {
+    const getMaintenanceDateFunc = async () => {
+      const maintenanceDateData = await getMaintenanceDate();
+
+      const maintenanceCookies = Cookies.get('maintenance') === undefined ? '' : Cookies.get('maintenance');
+
+      if ((maintenanceDateData.desc ?? '') !== maintenanceCookies) {
+        Cookies.set('maintenance', maintenanceDateData.desc ?? '', {
+          path: '/',
+          expires: new Date(2147483647 * 1000),
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'New Update Available',
+          html: 'Page will refresh now.',
+          timer: 2000,
+          showCancelButton: false,
+          showConfirmButton: false,
+          position: 'center',
+        }).then(() => {
+          window.location.reload(true);
+        });
+      }
+    };
+
+    getMaintenanceDateFunc().catch((error) => {
+      if (error === 503) {
+        navigate('/maintenance', { replace: true });
+      } else {
+        Swal.fire({
+          title: 'Fetch API failed',
+          text: error,
+          icon: 'error',
+          confirmButtonColor: '#3085d6',
+          confirmButtonText: 'OK',
+        });
+      }
+    });
+  }
+
+  const navigate = useNavigate();
+
   const [distinctValues, setDistinctValues] = useState({
     company_id: '',
     company_name: '',
@@ -60,6 +104,8 @@ export default function UpdateChartPage() {
   const [updatedCompanyChartDataList, setUpdatedCompanyChartDataList] = useState([]);
 
   useEffect(() => {
+    CheckMaintenance();
+
     let cookieCompanyId = Cookies.get('MJSMS_user_acc');
 
     if (cookieCompanyId !== null && cookieCompanyId !== undefined) {
@@ -73,29 +119,23 @@ export default function UpdateChartPage() {
             company_name: viewCompanyChartDetailsData.find((f) => f.company_id === Number(cookieCompanyId))
               .company_name,
           });
-        }
 
-        setCompanyChartDataList(viewCompanyChartDetailsData);
+          setCompanyChartDataList(viewCompanyChartDetailsData);
+        }
       };
 
       viewCompanyChartDetailsFunc().catch((error) => {
-        if (error.response.status === 503) {
+        if (error === 503) {
+          navigate('/maintenance', { replace: true });
+        } else {
           Swal.fire({
-            title: 'Offline Mode',
-            text: 'currently offline',
+            title: 'Fetch API failed',
+            text: error,
             icon: 'error',
             confirmButtonColor: '#3085d6',
             confirmButtonText: 'OK',
           });
         }
-
-        Swal.fire({
-          title: 'Fetch API failed',
-          text: error,
-          icon: 'error',
-          confirmButtonColor: '#3085d6',
-          confirmButtonText: 'OK',
-        });
       });
     }
   }, []);
@@ -270,6 +310,7 @@ export default function UpdateChartPage() {
   };
 
   const handleSubmit = (e) => {
+    CheckMaintenance();
     Swal.fire({
       title: 'Update Confirmation',
       html: 'You will not able to revert changes after the update.',
@@ -296,13 +337,17 @@ export default function UpdateChartPage() {
             }
           })
           .catch((error) => {
-            Swal.fire({
-              title: 'Fetch API failed',
-              html: error,
-              icon: 'error',
-              confirmButtonColor: '#3085d6',
-              confirmButtonText: 'OK',
-            });
+            if (error === 503) {
+              navigate('/maintenance', { replace: true });
+            } else {
+              Swal.fire({
+                title: 'Fetch API failed',
+                html: error,
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK',
+              });
+            }
           });
       }
     });
